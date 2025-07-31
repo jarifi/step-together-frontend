@@ -1,9 +1,8 @@
+import { Link, router } from 'expo-router';
 import React, { useState } from 'react';
-import { View, Text,StyleSheet, Animated, Dimensions, Pressable } from 'react-native';
-import { Link } from 'expo-router';
+import { Animated, Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useUser } from '../context/UserContext';
 import { removeToken } from '../lib/auth';
-import { router } from 'expo-router';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -50,7 +49,7 @@ export default function Sidebar() {
   return (
     <>
       <View style={styles.headerContainer}>
-        <Pressable  onPress={toggleSidebar} style={styles.burgerBtn}>
+        <Pressable onPress={toggleSidebar} style={styles.burgerBtn}>
           <Text style={{ color: 'white', fontSize: 24 }}>☰</Text>
         </Pressable >
       </View>
@@ -85,7 +84,7 @@ export default function Sidebar() {
           <NavLink href="/challenges" label="Alle Challenges" onNavigate={closeSidebar} />
           <View style={styles.separator} />
           <NavLink href="/settings" label="Einstellungen" onNavigate={closeSidebar} />
-          <Pressable  style={styles.navLink} onPress={handleLogout}>
+          <Pressable style={styles.navLink} onPress={handleLogout}>
             <Text style={[styles.navLinkText, { color: '#f87171' }]}>Logout</Text>
           </Pressable >
           <NavLink href="/admin" label="Admin-Bereich" onNavigate={closeSidebar} />
@@ -105,7 +104,7 @@ interface NavLinkProps {
 function NavLink({ href, label, style, onNavigate }: NavLinkProps) {
   return (
     <Link href={href} asChild>
-      <Pressable  style={styles.navLink} onPress={onNavigate}>
+      <Pressable style={styles.navLink} onPress={onNavigate}>
         <Text style={[styles.navLinkText, style]}>{label}</Text>
       </Pressable >
     </Link>
