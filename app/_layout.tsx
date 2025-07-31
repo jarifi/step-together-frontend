@@ -1,12 +1,12 @@
+import { router, Stack, usePathname } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Stack, usePathname, router } from 'expo-router';
-import { isLoggedIn } from '../lib/auth';
 import Sidebar from "../components/Sidebar";
+import { isLoggedIn } from '../lib/auth';
 
-import { ThemeProvider, DarkTheme, DefaultTheme } from '@react-navigation/native';
-import { useColorScheme } from '../hooks/useColorScheme';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { UserProvider } from '../context/UserContext';
+import { useColorScheme } from '../hooks/useColorScheme';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -36,9 +36,9 @@ export default function RootLayout() {
     <UserProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         {showSidebar && <Sidebar />}
-        <Stack initialRouteName="login">
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-          <Stack.Screen name="home" options={{ headerShown: false }} />
+        <Stack>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(app)" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="auto" />
