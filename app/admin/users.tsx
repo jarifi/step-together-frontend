@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useUser } from "../../context/UserContext";
+import { styles } from './style';
 
 export default function AdminUsersScreen() {
     type User = {
@@ -64,16 +65,25 @@ export default function AdminUsersScreen() {
         <View style={styles.container}>
             <Text style={styles.title}>Alle Benutzer</Text>
 
-            <FlatList
-                data={users}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                    <Pressable onPress={() => openUserModal(item)} style={styles.userItem}>
-                        <Text style={styles.name}>{item.name}</Text>
-                        <Text style={styles.email}>{item.email}</Text>
-                    </Pressable>
-                )}
-            />
+            <View style={{ flex: 1 }}>
+                <FlatList
+                    data={users}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <Pressable onPress={() => openUserModal(item)} style={styles.userItem}>
+                            <Text style={styles.name}>{item.name}</Text>
+                            <Text style={styles.subname}>{item.email}</Text>
+                        </Pressable>
+                    )}
+                    ListFooterComponent={
+                        <View style={styles.addButtonContainer}>
+                            <Pressable style={styles.addButton} onPress={() => console.log("Add new user")}>
+                                <Text style={styles.addButtonText}>+</Text>
+                            </Pressable>
+                        </View>
+                    }
+                />
+            </View>
 
             <Modal
                 visible={modalVisible}
@@ -91,6 +101,18 @@ export default function AdminUsersScreen() {
                                 <Text style={styles.modalText}><strong>Name:</strong> {selectedUser.name}</Text>
                                 <Text style={styles.modalText}><strong>E-Mail:</strong> {selectedUser.email}</Text>
                                 <Text style={styles.modalText}><strong>Schrittlänge:</strong> {selectedUser.step_length}</Text>
+
+                                <View style={styles.buttonContainer}>
+                                    <Pressable style={styles.button}>
+                                        <Text style={styles.buttonText}>Bearbeiten</Text>
+                                    </Pressable>
+                                    <Pressable style={styles.button}>
+                                        <Text style={styles.buttonText}>Löschen</Text>
+                                    </Pressable>
+                                    <Pressable style={styles.button} onPress={closeUserModal}>
+                                        <Text style={styles.buttonText}>Schließen</Text>
+                                    </Pressable>
+                                </View>
                             </>
                         )}
                     </Pressable>
@@ -99,66 +121,3 @@ export default function AdminUsersScreen() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 24,
-        backgroundColor: '#fff',
-    },
-    title: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 16,
-    },
-    userItem: {
-        padding: 12,
-        borderBottomColor: '#ccc',
-        borderBottomWidth: 1,
-    },
-    name: {
-        fontSize: 16,
-        fontWeight: '500',
-    },
-    email: {
-        fontSize: 14,
-        color: '#666',
-    },
-    centered: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalBackground: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalContainer: {
-        width: '80%',
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 24,
-        alignItems: 'center',
-    },
-    modalTitle: {
-        fontSize: 25,
-        fontWeight: 'bold',
-        marginBottom: 12,
-    },
-    modalText: {
-        fontSize: 18,
-    },
-    closeButton: {
-        marginTop: 20,
-        backgroundColor: '#1e604c',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 8,
-    },
-    closeButtonText: {
-        color: '#fff',
-        fontWeight: 'bold',
-    },
-});
