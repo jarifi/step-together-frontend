@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useUser } from "../../context/UserContext";
 
 export default function AdminChallengesScreen() {
@@ -18,8 +18,10 @@ export default function AdminChallengesScreen() {
     const { token, userId } = useUser();
     const [teams, setTeams] = useState<Team[]>([]);
     const [users, setUsers] = useState<User[]>([]);
-    console.log("Auth token:", token);
     const [loading, setLoading] = useState(true);
+
+    const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
 
     useEffect(() => {
         if (!token) {
@@ -31,10 +33,10 @@ export default function AdminChallengesScreen() {
             try {
                 const [teamsRes, usersRes] = await Promise.all([
                     fetch('http://localhost:3000/api/v1/teams', {
-                        headers: { Authorization: `Bearer ${token}`},
+                        headers: { Authorization: `Bearer ${token}` },
                     }),
                     fetch('http://localhost:3000/api/v1/users', {
-                        headers: { Authorization: `Bearer ${token}`},
+                        headers: { Authorization: `Bearer ${token}` },
                     }),
                 ]);
                 if (!teamsRes.ok) throw new Error('Failed to fetch teams');
@@ -55,6 +57,17 @@ export default function AdminChallengesScreen() {
         fetchTeamsAndUsers();
     }, [token]);
 
+    const openUserModal = (team: Team) => {
+        setSelectedTeam(team);
+        setModalVisible(true);
+    };
+
+    const closeUserModal = () => {
+        setModalVisible(false);
+        setSelectedTeam(null);
+    };
+
+
     if (loading) {
         return (
             <View style={styles.centered}>
@@ -70,18 +83,39 @@ export default function AdminChallengesScreen() {
                 data={teams}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
-                    <View style={styles.userItem}>
+                    <Pressable onPress={() => openUserModal(item)} style={styles.userItem}>
                         <Text style={styles.name}>{item.name}</Text>
                         <Text style={styles.creator}>Erstellt von: {
                             users.find(user => user.id === item.creator_id)?.name ?? 'Unknown'
                         }</Text>
-                    </View>
+                    </Pressable>
                 )}
             />
+            <Modal
+                visible={modalVisible}
+                animationType='slide'
+                transparent={true}
+                onRequestClose={closeUserModal}
+            >
+
+                <Pressable style={styles.modalBackground} onPress={closeUserModal}>
+
+                    <Pressable style={styles.modalContainer} onPress={(e) => e.stopPropagation()}>
+                        <Text style={styles.modalTitle}>Team Details</Text>
+                        {selectedTeam && (
+                            <>
+                                <Text style={styles.modalText}><strong>Name:</strong> {selectedTeam.name}</Text>
+                                <Text style={styles.modalText}><strong>Ersteller:</strong> {
+                                    users.find(user => user.id === selectedTeam.creator_id)?.name ?? 'Unknown'
+                                }</Text>
+                            </>
+                        )}
+                    </Pressable>
+                </Pressable>
+            </Modal>
         </View>
     );
 }
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -110,5 +144,37 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    modalBackground: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContainer: {
+        width: '80%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 24,
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 25,
+        fontWeight: 'bold',
+        marginBottom: 12,
+    },
+    modalText: {
+        fontSize: 18,
+    },
+    closeButton: {
+        marginTop: 20,
+        backgroundColor: '#1e604c',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+    },
+    closeButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
     },
 });

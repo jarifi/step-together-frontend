@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useUser } from "../../context/UserContext";
 
 export default function AdminUsersScreen() {
@@ -7,12 +7,15 @@ export default function AdminUsersScreen() {
         id: number;
         name: string;
         email: string;
+        step_length: number;
     };
 
     const { token, userId } = useUser();
     const [users, setUsers] = useState<User[]>([]);
-    console.log("Auth token:", token);
     const [loading, setLoading] = useState(true);
+
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
 
     useEffect(() => {
         if (!token) {
@@ -39,6 +42,16 @@ export default function AdminUsersScreen() {
         fetchUsers();
     }, [token]);
 
+    const openUserModal = (user: User) => {
+        setSelectedUser(user);
+        setModalVisible(true);
+    };
+
+    const closeUserModal = () => {
+        setModalVisible(false);
+        setSelectedUser(null);
+    };
+
     if (loading) {
         return (
             <View style={styles.centered}>
@@ -50,16 +63,39 @@ export default function AdminUsersScreen() {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Alle Benutzer</Text>
+
             <FlatList
                 data={users}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
-                    <View style={styles.userItem}>
+                    <Pressable onPress={() => openUserModal(item)} style={styles.userItem}>
                         <Text style={styles.name}>{item.name}</Text>
                         <Text style={styles.email}>{item.email}</Text>
-                    </View>
+                    </Pressable>
                 )}
             />
+
+            <Modal
+                visible={modalVisible}
+                animationType='slide'
+                transparent={true}
+                onRequestClose={closeUserModal}
+            >
+
+                <Pressable style={styles.modalBackground} onPress={closeUserModal}>
+
+                    <Pressable style={styles.modalContainer} onPress={(e) => e.stopPropagation()}>
+                        <Text style={styles.modalTitle}>Benutzer Details</Text>
+                        {selectedUser && (
+                            <>
+                                <Text style={styles.modalText}><strong>Name:</strong> {selectedUser.name}</Text>
+                                <Text style={styles.modalText}><strong>E-Mail:</strong> {selectedUser.email}</Text>
+                                <Text style={styles.modalText}><strong>Schrittlänge:</strong> {selectedUser.step_length}</Text>
+                            </>
+                        )}
+                    </Pressable>
+                </Pressable>
+            </Modal>
         </View>
     );
 }
@@ -92,5 +128,37 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    modalBackground: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContainer: {
+        width: '80%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 24,
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 25,
+        fontWeight: 'bold',
+        marginBottom: 12,
+    },
+    modalText: {
+        fontSize: 18,
+    },
+    closeButton: {
+        marginTop: 20,
+        backgroundColor: '#1e604c',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+    },
+    closeButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
     },
 });

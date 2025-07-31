@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useUser } from "../../context/UserContext";
 
 export default function AdminChallengesScreen() {
@@ -8,12 +8,17 @@ export default function AdminChallengesScreen() {
         name: string;
         start_location: string;
         target_location: string;
+        distance: number;
+        start_date: Date;
+        end_date: Date;
     };
 
     const { token, userId } = useUser();
     const [challenges, setChallenges] = useState<Challenge[]>([]);
-    console.log("Auth token:", token);
     const [loading, setLoading] = useState(true);
+
+    const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
+    const [modalVisible, setModalVisible] = useState(false);
 
     useEffect(() => {
         if (!token) {
@@ -29,7 +34,14 @@ export default function AdminChallengesScreen() {
                 if (!response.ok) throw new Error('Failed to fetch challenges');
 
                 const data = await response.json();
-                setChallenges(data);
+
+                const parsedData = data.map((item: any) => ({
+                    ...item,
+                    start_date: new Date(item.start_date),
+                    end_date: new Date(item.end_date),
+                })); 
+
+                setChallenges(parsedData);
             } catch (error) {
                 console.error(error);
             } finally {
@@ -39,6 +51,18 @@ export default function AdminChallengesScreen() {
 
         fetchChallenges();
     }, [token]);
+
+
+    const openUserModal = (challenge: Challenge) => {
+        setSelectedChallenge(challenge);
+        setModalVisible(true);
+    };
+
+    const closeUserModal = () => {
+        setModalVisible(false);
+        setSelectedChallenge(null);
+    };
+
 
     if (loading) {
         return (
@@ -55,16 +79,50 @@ export default function AdminChallengesScreen() {
                 data={challenges}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
-                    <View style={styles.userItem}>
+                    <Pressable style={styles.userItem} onPress={() => openUserModal(item)}>
                         <Text style={styles.name}>{item.name}</Text>
                         <Text style={styles.location}>{item.start_location}</Text>
                         <Text style={styles.location}>{item.target_location}</Text>
-                    </View>
+                    </Pressable>
                 )}
             />
+
+            <Modal
+                visible={modalVisible}
+                animationType='slide'
+                transparent={true}
+                onRequestClose={closeUserModal}
+            >
+
+                <Pressable style={styles.modalBackground} onPress={closeUserModal}>
+
+                    <Pressable style={styles.modalContainer} onPress={(e) => e.stopPropagation()}>
+                        <Text style={styles.modalTitle}>Challenge Details</Text>
+                        {selectedChallenge && (
+                            <>
+                                <Text style={styles.modalText}><strong>Name:</strong> {selectedChallenge.name}</Text>
+                                <Text style={styles.modalText}><strong>Startort:</strong> {selectedChallenge.start_location}</Text>
+                                <Text style={styles.modalText}><strong>Zielort:</strong> {selectedChallenge.target_location}</Text>
+                                <Text style={styles.modalText}><strong>Entfernung:</strong> {selectedChallenge.distance}</Text>
+                                <Text style={styles.modalText}><strong>Startdatum:</strong> {selectedChallenge.start_date.toLocaleDateString('de-DE', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                })}</Text>
+                                <Text style={styles.modalText}><strong>Enddatum:</strong> {selectedChallenge.end_date.toLocaleDateString('de-DE', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                })}</Text>
+                            </>
+                        )}
+                    </Pressable>
+                </Pressable>
+            </Modal>
         </View>
     );
 }
+
 
 const styles = StyleSheet.create({
     container: {
@@ -94,5 +152,37 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    modalBackground: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContainer: {
+        width: '80%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 24,
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 25,
+        fontWeight: 'bold',
+        marginBottom: 12,
+    },
+    modalText: {
+        fontSize: 18,
+    },
+    closeButton: {
+        marginTop: 20,
+        backgroundColor: '#1e604c',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+    },
+    closeButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
     },
 });
